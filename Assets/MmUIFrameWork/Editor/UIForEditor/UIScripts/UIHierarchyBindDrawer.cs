@@ -56,12 +56,12 @@ namespace MieMieUITools.Editor
 
         static UIHierarchyBindDrawer()
         {
-            EditorApplication.hierarchyWindowItemOnGUI += OnHierarchyWindowItemGUI;
+            EditorApplication.hierarchyWindowItemByEntityIdOnGUI += OnHierarchyWindowItemGUI;
         }
 
-        private static void OnHierarchyWindowItemGUI(int instanceID, Rect selectionRect)
+        private static void OnHierarchyWindowItemGUI(EntityId entityId, Rect selectionRect)
         {
-            var gameObject = EditorUtility.InstanceIDToObject(instanceID) as GameObject;
+            var gameObject = EditorUtility.EntityIdToObject(entityId) as GameObject;
             if (gameObject == null) return;
 
             if (!TryGetUIRoot(gameObject.transform, out Transform uiRoot, out Transform uiContent)) return;

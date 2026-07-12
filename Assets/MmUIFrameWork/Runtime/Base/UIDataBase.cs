@@ -33,8 +33,7 @@ namespace MieMieFrameWork.UI
             this.UIContent.localScale = Vector3.one * 0.8f;
             this.UIContent.DOScale(Vector3.one, 0.3f).SetEase(Ease.OutBack).OnComplete(() =>
             {
-                // CanvasGroup.DOFade 在 DOTweenModuleUI 中 本程序集只引 DOTween.dll 故改用核心 To
-                DOTween.To(() => this.UICanvasGroup.alpha, x => this.UICanvasGroup.alpha = x, 1f, 0.15f);
+                this.UICanvasGroup.DOFade(1f, 0.15f);
             });
         }
 
@@ -42,7 +41,7 @@ namespace MieMieFrameWork.UI
         {
             this.UIContent.DOScale(Vector3.one * 0.8f, 0.2f).SetEase(Ease.InBack).OnComplete(() =>
             {
-                DOTween.To(() => this.UICanvasGroup.alpha, x => this.UICanvasGroup.alpha = x, 0f, 0.15f);
+                this.UICanvasGroup.DOFade(0f, 0.15f);
             });
         }
         #endregion
