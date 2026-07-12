@@ -27,7 +27,7 @@ namespace MieMieFrameWork.UI
         internal protected abstract void OnDestroy();
         #endregion
 
-        #region 全局动画效果
+        #region 全局动画效果 
         protected virtual void GlobalAnimationShow()
         {
             this.UIContent.localScale = Vector3.one * 0.8f;

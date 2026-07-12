@@ -1,6 +1,6 @@
-﻿{
+{
   "name": "com.hakisheep.mm-uiframe",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "displayName": "Mm UI Frame",
   "description": "HakiMm UI runtime editor tools DoTweenAnim and extracted UIAddressable loader.",
   "unity": "2021.3",
