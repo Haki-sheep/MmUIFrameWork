@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "com.unity.addressables": "2.9.1",
-    "com.unity.ugui": "2.5.0",
-    "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask"
+    "com.unity.ugui": "2.5.0"
   }
 }
