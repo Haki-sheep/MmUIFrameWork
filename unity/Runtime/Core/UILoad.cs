@@ -9,7 +9,8 @@ namespace MieMieFrameWork.UI
     public static class UILoad
     {
         /// <summary>
-        /// 当前资源加载器 未设置时使用 Addressables 默认实现
+        /// 当前资源加载器
+        /// 优先手动注入 否则自动桥接 AddressableMgr 再回退 UIAddressable
         /// </summary>
         public static IUIAssetLoader Loader { get; set; }
 
@@ -21,7 +22,14 @@ namespace MieMieFrameWork.UI
             if (Loader != null)
                 return Loader;
 
-            Loader = new AddressablesUIAssetLoader();
+            if (AddressableMgrBridgeLoader.TryCreate(out var bridge))
+            {
+                Loader = bridge;
+                Debug.Log("[UILoad] 已桥接宿主 AddressableMgr");
+                return Loader;
+            }
+
+            Loader = new UIAddressableLoader();
             return Loader;
         }
 
