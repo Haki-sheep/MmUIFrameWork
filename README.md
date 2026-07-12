@@ -14,8 +14,8 @@ HakiMm UI 运行时与编辑器工具的独立 UPM 包。
 
 ## 目录
 
-- `unity/Runtime` UI 运行时
-- `unity/Editor` UI 生成器与 Hierarchy 绑定（随包附带 无需单独导入）
+- `unity/Runtime` UI 运行时与 DoTweenAnim
+- `unity/Editor` UI 生成器 Hierarchy 绑定 DOTweenSequence 编辑器（随包附带 无需单独导入）
 - `unity/Prefabs` UIRoot / UITemple 模板
 - `Assets/Plugins` 本仓库本地开发用 DOTween / Odin（不进入 UPM 包）
 
