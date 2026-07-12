@@ -264,7 +264,7 @@ Canvas:
   m_Enabled: 1
   serializedVersion: 3
   m_RenderMode: 1
-  m_Camera: {fileID: 1435392725444189424, guid: 52c5ca78d43698144a8b6a9e0fa3fc12, type: 3}
+  m_Camera: {fileID: 0}
   m_PlaneDistance: 100
   m_PixelPerfect: 1
   m_ReceivesEvents: 1
@@ -341,7 +341,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5cadae3fccb5bcd4b9e2334b0afe0ea0, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MieMieFrameWork.UI.UIBindConfig
+  m_EditorClassIdentifier: MieMieFrameWork.UI::MieMieFrameWork.UI.UIBindConfig
   bindItemList: []
 --- !u!1 &8274285150965118983
 GameObject:
