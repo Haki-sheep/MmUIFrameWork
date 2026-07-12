@@ -1,0 +1,15 @@
+{
+  "name": "com.hakisheep.mm-uiframe",
+  "version": "1.0.0",
+  "displayName": "Mm UI Frame",
+  "description": "HakiMm UI runtime and editor tools. Editor ships with this package no separate import.",
+  "unity": "2021.3",
+  "documentationUrl": "https://github.com/Haki-sheep/MmUIFrameWork",
+  "author": {
+    "name": "Haki-sheep"
+  },
+  "dependencies": {
+    "com.unity.addressables": "1.21.0",
+    "com.unity.ugui": "1.0.0"
+  }
+}

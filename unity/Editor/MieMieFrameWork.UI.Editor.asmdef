@@ -1,0 +1,19 @@
+{
+    "name": "MieMieFrameWork.UI.Editor",
+    "rootNamespace": "MieMieUITools.Editor",
+    "references": [
+        "MieMieFrameWork.UI",
+        "Unity.TextMeshPro"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
