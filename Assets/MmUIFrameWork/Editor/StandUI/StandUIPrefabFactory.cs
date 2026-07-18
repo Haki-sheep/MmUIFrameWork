@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using MieMieUITools.Editor;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
@@ -9,8 +10,8 @@ using UnityEngine.UI;
 /// </summary>
 public static class StandUIPrefabFactory
 {
-    private const string RootFolder = "Assets/MmUIFrameWork/StandUIPrefabs";
-    private const string PresetFolder = "Assets/MmUIFrameWork/UIFrame/DoTweenAnim/Presets";
+    private static string RootFolder => PackagePaths.StandUIPrefabsRoot;
+    private static string PresetFolder => PackagePaths.DoTweenPresetsRoot;
 
     private static readonly Color ColorPanel = new Color(0.12f, 0.12f, 0.15f, 0.96f);
     private static readonly Color ColorButton = new Color(0.22f, 0.22f, 0.28f, 1f);

@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using DG.Tweening;
+using MieMieUITools.Editor;
 using UnityEditor;
 using UnityEngine;
 
@@ -11,7 +12,7 @@ public static class DOTweenPresetFactory
     /// <summary>
     /// 输出目录
     /// </summary>
-    private const string OutputFolder = "Assets/MmUIFrameWork/UIFrame/DoTweenAnim/Presets";
+    private static string OutputFolder => PackagePaths.DoTweenPresetsRoot;
 
     [MenuItem("Tools/MieMieFrameWork/TestAndCreat/生成经典 UI 预设")]
     public static void GenerateClassicPresets()

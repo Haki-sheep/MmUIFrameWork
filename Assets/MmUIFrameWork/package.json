@@ -1,8 +1,8 @@
 {
   "name": "com.hakisheep.mm-uiframe",
-  "version": "1.0.5",
+  "version": "1.1.0",
   "displayName": "Mm UI Frame",
-  "description": "HakiMm UI runtime editor tools DoTweenAnim and extracted UIAddressable loader. Requires DOTween installed in the project.",
+  "description": "通用 UI 框架 含窗口栈 Addressable 加载 StandUI DOTween 序列 跳字 物品轮盘 不含具体游戏窗口与玩法数据 宿主需自备 DOTween 与 Odin Inspector",
   "unity": "6000.0",
   "documentationUrl": "https://github.com/Haki-sheep/MmUIFrameWork",
   "author": {
@@ -10,6 +10,15 @@
   },
   "dependencies": {
     "com.unity.addressables": "2.9.1",
-    "com.unity.ugui": "2.5.0"
-  }
+    "com.unity.ugui": "2.5.0",
+    "com.unity.inputsystem": "1.7.0",
+    "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask"
+  },
+  "samples": [
+    {
+      "displayName": "Demo",
+      "description": "StandUI 跳字 轮盘试玩场景",
+      "path": "Samples~/Demo"
+    }
+  ]
 }

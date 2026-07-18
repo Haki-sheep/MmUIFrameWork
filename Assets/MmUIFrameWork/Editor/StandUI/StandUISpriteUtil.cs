@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System.IO;
+using MieMieUITools.Editor;
 using UnityEditor;
 using UnityEngine;
 
@@ -11,13 +12,13 @@ internal static class StandUISpriteUtil
     /// <summary>
     /// 共享美术目录
     /// </summary>
-    public const string SharedArtFolder = "Assets/MmUIFrameWork/StandUIPrefabs/_Shared/Art";
+    public static string SharedArtFolder => PackagePaths.StandUIPrefabsRoot + "/_Shared/Art";
 
-    public const string RoundPanelPath = SharedArtFolder + "/Stand_RoundPanel.png";
-    public const string CapsulePath = SharedArtFolder + "/Stand_Capsule.png";
-    public const string CirclePath = SharedArtFolder + "/Stand_Circle.png";
-    public const string SharpPanelPath = SharedArtFolder + "/Stand_SharpPanel.png";
-    public const string HandleKnobPath = SharedArtFolder + "/Stand_HandleKnob.png";
+    public static string RoundPanelPath => SharedArtFolder + "/Stand_RoundPanel.png";
+    public static string CapsulePath => SharedArtFolder + "/Stand_Capsule.png";
+    public static string CirclePath => SharedArtFolder + "/Stand_Circle.png";
+    public static string SharpPanelPath => SharedArtFolder + "/Stand_SharpPanel.png";
+    public static string HandleKnobPath => SharedArtFolder + "/Stand_HandleKnob.png";
 
     /// <summary>
     /// Stand 共用图集

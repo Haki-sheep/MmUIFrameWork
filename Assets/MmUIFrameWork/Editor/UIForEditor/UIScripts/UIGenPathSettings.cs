@@ -35,7 +35,7 @@ namespace MieMieUITools.Editor
     public static class UIGenPathSettings
     {
         public const string DefaultRelativePath =
-            "Assets/MieMieFrameTools/Editor/UIForEditor/UIGenPath/UIGenPathSettings.json";
+            "Assets/MmUIFrameWork/Editor/UIForEditor/UIGenPath/UIGenPathSettings.json";
 
         private static UIGenPathSettingsData _cached;
 

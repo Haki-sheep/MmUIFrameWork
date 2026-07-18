@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using MieMieFrameWork.UI.FloatingText;
+using MieMieUITools.Editor;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
@@ -14,14 +15,14 @@ using UnityEngine.TextCore;
 /// </summary>
 public static class FloatingTextAtlasBaker
 {
-    public const string RootFolder = "Assets/MmUIFrameWork/UIFrame/FloatingText";
-    public const string GeneratedFolder = RootFolder + "/Art/Generated";
-    public const string SourceFolder = RootFolder + "/Art/Source";
-    public const string AtlasPath = GeneratedFolder + "/FloatingTextAtlas.png";
-    public const string MaterialPath = GeneratedFolder + "/FloatingText.mat";
-    public const string CharMapPath = GeneratedFolder + "/FloatingTextCharMap.asset";
-    public const string PrefabPath = GeneratedFolder + "/FloatingTextWorld.prefab";
-    public const string ManagerPrefabPath = GeneratedFolder + "/FloatingTextManager.prefab";
+    public static string RootFolder => PackagePaths.FloatingTextRoot;
+    public static string GeneratedFolder => RootFolder + "/Art/Generated";
+    public static string SourceFolder => RootFolder + "/Art/Source";
+    public static string AtlasPath => GeneratedFolder + "/FloatingTextAtlas.png";
+    public static string MaterialPath => GeneratedFolder + "/FloatingText.mat";
+    public static string CharMapPath => GeneratedFolder + "/FloatingTextCharMap.asset";
+    public static string PrefabPath => GeneratedFolder + "/FloatingTextWorld.prefab";
+    public static string ManagerPrefabPath => GeneratedFolder + "/FloatingTextManager.prefab";
     public const string CritGuid = "49dcf50e28fe3dd40a0c3a030f128c66";
 
     public const string DefaultCharset =

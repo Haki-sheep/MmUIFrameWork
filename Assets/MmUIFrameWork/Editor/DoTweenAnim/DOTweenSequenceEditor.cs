@@ -246,7 +246,7 @@ public class DOTweenSequenceEditor : Editor
             return;
         }
 
-        string defaultDir = "Assets/MmUIFrameWork/UIFrame/DoTweenAnim/Presets";
+        string defaultDir = MieMieUITools.Editor.PackagePaths.DoTweenPresetsRoot;
         if (!AssetDatabase.IsValidFolder(defaultDir))
         {
             defaultDir = "Assets";
