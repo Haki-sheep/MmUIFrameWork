@@ -58,26 +58,16 @@ namespace MieMieFrameWork.UI
 
         internal protected override void OnShow()
         {
-            if(ApplyAniamtion)
-                GlobalAnimationShow();
-            else{
-                this.UICanvasGroup.alpha = 1;
-            }
+            this.UICanvasGroup.alpha = 1;
             this.UICanvasGroup.blocksRaycasts = true;
             this.UICanvasGroup.interactable = true;
         }
         
         internal protected override void OnHide()
         {
-             if(ApplyAniamtion) 
-                GlobalAnimationHide();
-            else{
-                //不同动画效果则直接将透明度设置为0
-                this.UICanvasGroup.alpha = 0;
-            }
+            this.UICanvasGroup.alpha = 0;
             this.UICanvasGroup.blocksRaycasts = false;
             this.UICanvasGroup.interactable = false;
-
         }
 
         internal protected override void OnDestroy()

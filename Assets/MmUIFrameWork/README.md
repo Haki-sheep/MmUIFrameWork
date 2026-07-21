@@ -53,7 +53,10 @@
 ```text
 com.hakisheep.mm-uiframe/
 ├── package.json
-├── Runtime/          # 运行时 + StandUIPrefabs + Widgets
-├── Editor/           # 生成器 烘焙 自定义 Inspector
-└── Samples~/Demo/    # 可选试玩场景
+├── MieMieFrameWork.UI.asmdef   # 覆盖 Runtime + Widgets
+├── Runtime/                    # 窗口栈 加载器
+├── Widgets/                    # DOTween序列 跳字 轮盘
+├── StandUIPrefabs/             # 标准控件预制体
+├── Editor/                     # 生成器 烘焙 自定义 Inspector
+└── Samples~/Demo/              # 可选试玩场景
 ```

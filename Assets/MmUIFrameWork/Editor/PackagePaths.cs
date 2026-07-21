@@ -29,13 +29,13 @@ namespace MieMieUITools.Editor
         public static string RuntimeRoot => $"{PackageRoot}/Runtime";
 
         /// <summary> StandUI 预制体根目录 </summary>
-        public static string StandUIPrefabsRoot => $"{RuntimeRoot}/StandUIPrefabs";
+        public static string StandUIPrefabsRoot => $"{PackageRoot}/StandUIPrefabs";
 
         /// <summary> DOTween 预设目录 </summary>
-        public static string DoTweenPresetsRoot => $"{RuntimeRoot}/Widgets/DoTweenAnimExtension/Presets";
+        public static string DoTweenPresetsRoot => $"{PackageRoot}/Widgets/DoTweenAnimExtension/Presets";
 
         /// <summary> 跳字系统根目录 </summary>
-        public static string FloatingTextRoot => $"{RuntimeRoot}/Widgets/FloatingTextSystem";
+        public static string FloatingTextRoot => $"{PackageRoot}/Widgets/FloatingTextSystem";
 
         /// <summary>
         /// 清空缓存
@@ -57,10 +57,15 @@ namespace MieMieUITools.Editor
                 if (!path.EndsWith("/MieMieFrameWork.UI.asmdef", System.StringComparison.OrdinalIgnoreCase))
                     continue;
 
-                string runtimeDir = Path.GetDirectoryName(path)?.Replace('\\', '/');
-                string root = Path.GetDirectoryName(runtimeDir)?.Replace('\\', '/');
-                if (!string.IsNullOrEmpty(root))
-                    return root;
+                // asmdef 在包根 或 Runtime 子目录 两种布局都兼容
+                string asmDir = Path.GetDirectoryName(path)?.Replace('\\', '/');
+                if (string.IsNullOrEmpty(asmDir))
+                    continue;
+
+                if (asmDir.EndsWith("/Runtime", System.StringComparison.OrdinalIgnoreCase))
+                    return Path.GetDirectoryName(asmDir)?.Replace('\\', '/') ?? asmDir;
+
+                return asmDir;
             }
 
             if (Directory.Exists("Packages/com.hakisheep.mm-uiframe"))

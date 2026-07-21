@@ -11,14 +11,27 @@ namespace MieMieFrameWork.UI
     public class UIBindConfig : MonoBehaviour
     {
         /// <summary>
+        /// Hierarchy 是否显示可勾选绑定按钮
+        /// </summary>
+        [SerializeField]
+        private bool showHierarchyBindButtons = true;
+
+        /// <summary>
         /// 绑定项目列表
         /// </summary>
         [SerializeField]
+        [HideInInspector]
         private List<UIBindItem> bindItemList = new List<UIBindItem>();
 
         public IReadOnlyList<UIBindItem> BindItemList => bindItemList;
 
 #if UNITY_EDITOR
+        public bool ShowHierarchyBindButtons
+        {
+            get => showHierarchyBindButtons;
+            set => showHierarchyBindButtons = value;
+        }
+
         public List<UIBindItem> EditorBindItemList => bindItemList;
 #endif
     }

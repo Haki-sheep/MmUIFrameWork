@@ -1,6 +1,9 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
 using System.IO;
+using MieMieFrameWork.UI;
+using MieMieUITools.Editor;
+using TMPro;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,19 +18,21 @@ public class ItemWheelEditorWindow : EditorWindow
         正放,
         顺向
     }
-    private const string DefaultSaveFolder = "Assets/Scripts/Item Wheel/Prefab";
-    private const string WheelPrefabName = "Item Wheel.prefab";
-    private const float PreviewHeight = 300f;
+
+    private const string CleanPrefabName = "Item Wheel.prefab";
+    private const string TemplePrefabName = "UIItemWheel.prefab";
+    private const string ItemInfoObjectName = "ItemInfo";
+    private const float PreviewHeight = 320f;
     private const string PrefsPrefix = "MmItemWheel_";
 
     [MenuItem("Tools/Mm ItemWheel")]
     private static void Open()
     {
         var window = GetWindow<ItemWheelEditorWindow>("Mm ItemWheel");
-        window.minSize = new Vector2(360f, 620f);
+        window.minSize = new Vector2(380f, 720f);
     }
 
-    private string saveFolder = DefaultSaveFolder;
+    private string saveFolder;
 
     private Vector2 centerPosition = Vector2.zero;
     private float circleInner = 350f;
@@ -48,14 +53,29 @@ public class ItemWheelEditorWindow : EditorWindow
     private IconRotationMode iconRotation = IconRotationMode.顺向;
     private Sprite previewIconSprite;
 
+    private bool generateItemInfo = true;
+    private string previewInfoText = "物品说明";
+    private string idleInfoText = string.Empty;
+    private float infoFontSize = 36f;
+    private Color infoFontColor = Color.white;
+    private Vector2 infoSizeDelta = new Vector2(200f, 80f);
+    private TextAlignmentOptions infoAlignment = TextAlignmentOptions.Center;
+    private TMP_FontAsset infoFontAsset;
+
     private Vector2 scrollPos;
     private GUIStyle legendStyle;
+    private GUIStyle previewInfoStyle;
 
     private static readonly Color InnerCircleColor = new Color(0.25f, 0.85f, 1f, 1f);
     private static readonly Color OuterRadiusColor = new Color(1f, 0.55f, 0.15f, 1f);
     private static readonly Color GapColor = new Color(0.12f, 0.12f, 0.14f, 1f);
 
-    private void OnEnable() => LoadSettings();
+    private void OnEnable()
+    {
+        if (string.IsNullOrEmpty(saveFolder))
+            saveFolder = GetDefaultSaveFolder();
+        LoadSettings();
+    }
 
     private void OnDisable() => SaveSettings();
 
@@ -119,13 +139,40 @@ public class ItemWheelEditorWindow : EditorWindow
         previewIconSprite = (Sprite)EditorGUILayout.ObjectField("预览图标", previewIconSprite, typeof(Sprite), false);
 
         EditorGUILayout.Space(8f);
+        EditorGUILayout.LabelField("中心说明 ItemInfo (TMP)", EditorStyles.boldLabel);
+        generateItemInfo = EditorGUILayout.Toggle("生成 ItemInfo", generateItemInfo);
+        using (new EditorGUI.DisabledScope(!generateItemInfo))
+        {
+            previewInfoText = EditorGUILayout.TextField("预览文案", previewInfoText);
+            idleInfoText = EditorGUILayout.TextField("未选中文案", idleInfoText);
+            infoFontSize = EditorGUILayout.FloatField("字号", infoFontSize);
+            infoFontColor = EditorGUILayout.ColorField("文字颜色", infoFontColor);
+            infoSizeDelta = EditorGUILayout.Vector2Field("文本框尺寸", infoSizeDelta);
+            infoAlignment = (TextAlignmentOptions)EditorGUILayout.EnumPopup("对齐", infoAlignment);
+            infoFontAsset = (TMP_FontAsset)EditorGUILayout.ObjectField("字体资源", infoFontAsset, typeof(TMP_FontAsset), false);
+            EditorGUILayout.HelpBox(
+                "ItemInfo 只负责中心 TMP 样式\n物品数据由 ItemWheelController.SetItems / BindItemData 运行时注入",
+                MessageType.Info);
+        }
+
+        EditorGUILayout.Space(8f);
         EditorGUILayout.LabelField("尺寸与网格", EditorStyles.boldLabel);
         EditorGUILayout.LabelField($"Rect  {circleOuter * 2f:0} × {circleOuter * 2f:0}  ← 外圆半径 × 2", EditorStyles.helpBox);
         EditorGUILayout.LabelField($"预估顶点  {EstimateTotalVertices():0}  ← 扇环数 × 弧段数", EditorStyles.miniLabel);
 
-        EditorGUILayout.Space(8f);
-        if (GUILayout.Button("生成 Item Wheel 预制体", GUILayout.Height(36f)))
-            GenerateItemWheelPrefab();
+        EditorGUILayout.Space(10f);
+        EditorGUILayout.LabelField("生成", EditorStyles.boldLabel);
+        EditorGUILayout.HelpBox(
+            "干净轮盘 仅扇环结构可挂任意 Canvas\n" +
+            "标准模版 对齐 UITemple 根 Canvas/CanvasGroup/UIBindConfig + UIContent + UIMask",
+            MessageType.None);
+
+        EditorGUILayout.BeginHorizontal();
+        if (GUILayout.Button("生成干净轮盘预制体", GUILayout.Height(40f)))
+            GenerateItemWheelPrefab(false);
+        if (GUILayout.Button("生成 UITemple 标准结构", GUILayout.Height(40f)))
+            GenerateItemWheelPrefab(true);
+        EditorGUILayout.EndHorizontal();
 
         EditorGUILayout.EndScrollView();
 
@@ -141,11 +188,19 @@ public class ItemWheelEditorWindow : EditorWindow
     }
 
     /// <summary>
+    /// 默认保存到包内 ItemWheel Prefab 目录
+    /// </summary>
+    private static string GetDefaultSaveFolder()
+    {
+        return $"{PackagePaths.PackageRoot}/Widgets/ItemWheel/Prefab";
+    }
+
+    /// <summary>
     /// 从 EditorPrefs 读取窗口参数
     /// </summary>
     private void LoadSettings()
     {
-        saveFolder = EditorPrefs.GetString(PrefsPrefix + "SaveFolder", DefaultSaveFolder);
+        saveFolder = EditorPrefs.GetString(PrefsPrefix + "SaveFolder", GetDefaultSaveFolder());
         centerPosition.x = EditorPrefs.GetFloat(PrefsPrefix + "CenterX", 0f);
         centerPosition.y = EditorPrefs.GetFloat(PrefsPrefix + "CenterY", 0f);
         circleInner = EditorPrefs.GetFloat(PrefsPrefix + "CircleInner", 350f);
@@ -162,6 +217,16 @@ public class ItemWheelEditorWindow : EditorWindow
         sectorColor = LoadColor(PrefsPrefix + "SectorColor", sectorColor);
         centerColor = LoadColor(PrefsPrefix + "CenterColor", centerColor);
         borderColor = LoadColor(PrefsPrefix + "BorderColor", borderColor);
+
+        generateItemInfo = EditorPrefs.GetBool(PrefsPrefix + "GenerateItemInfo", true);
+        previewInfoText = EditorPrefs.GetString(PrefsPrefix + "PreviewInfoText", "物品说明");
+        idleInfoText = EditorPrefs.GetString(PrefsPrefix + "IdleInfoText", "");
+        infoFontSize = EditorPrefs.GetFloat(PrefsPrefix + "InfoFontSize", 36f);
+        infoFontColor = LoadColor(PrefsPrefix + "InfoFontColor", Color.white);
+        infoSizeDelta.x = EditorPrefs.GetFloat(PrefsPrefix + "InfoSizeX", 200f);
+        infoSizeDelta.y = EditorPrefs.GetFloat(PrefsPrefix + "InfoSizeY", 80f);
+        infoAlignment = (TextAlignmentOptions)EditorPrefs.GetInt(PrefsPrefix + "InfoAlignment", (int)TextAlignmentOptions.Center);
+        infoFontAsset = LoadFontFromGuid(EditorPrefs.GetString(PrefsPrefix + "InfoFontGUID", ""));
     }
 
     /// <summary>
@@ -187,6 +252,17 @@ public class ItemWheelEditorWindow : EditorWindow
         SaveColor(PrefsPrefix + "SectorColor", sectorColor);
         SaveColor(PrefsPrefix + "CenterColor", centerColor);
         SaveColor(PrefsPrefix + "BorderColor", borderColor);
+
+        EditorPrefs.SetBool(PrefsPrefix + "GenerateItemInfo", generateItemInfo);
+        EditorPrefs.SetString(PrefsPrefix + "PreviewInfoText", previewInfoText ?? "");
+        EditorPrefs.SetString(PrefsPrefix + "IdleInfoText", idleInfoText ?? "");
+        EditorPrefs.SetFloat(PrefsPrefix + "InfoFontSize", infoFontSize);
+        SaveColor(PrefsPrefix + "InfoFontColor", infoFontColor);
+        EditorPrefs.SetFloat(PrefsPrefix + "InfoSizeX", infoSizeDelta.x);
+        EditorPrefs.SetFloat(PrefsPrefix + "InfoSizeY", infoSizeDelta.y);
+        EditorPrefs.SetInt(PrefsPrefix + "InfoAlignment", (int)infoAlignment);
+        EditorPrefs.SetString(PrefsPrefix + "InfoFontGUID",
+            infoFontAsset != null ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(infoFontAsset)) : "");
     }
 
     private static Color LoadColor(string key, Color fallback)
@@ -204,6 +280,13 @@ public class ItemWheelEditorWindow : EditorWindow
         if (string.IsNullOrEmpty(guid)) return null;
         string path = AssetDatabase.GUIDToAssetPath(guid);
         return string.IsNullOrEmpty(path) ? null : AssetDatabase.LoadAssetAtPath<Sprite>(path);
+    }
+
+    private static TMP_FontAsset LoadFontFromGuid(string guid)
+    {
+        if (string.IsNullOrEmpty(guid)) return null;
+        string path = AssetDatabase.GUIDToAssetPath(guid);
+        return string.IsNullOrEmpty(path) ? null : AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(path);
     }
 
     private static void SaveColor(string key, Color color)
@@ -291,6 +374,8 @@ public class ItemWheelEditorWindow : EditorWindow
             Handles.EndGUI();
 
             DrawSectorIconPreviews(center, scale, sectorInner, fillOuter, startList, sweepList);
+            if (generateItemInfo)
+                DrawCenterInfoPreview(center, scale);
         }
 
         float sweep = sectorCount > 0 ? Mathf.Max(0.001f, 360f / sectorCount - arcOffset) : 0f;
@@ -303,14 +388,41 @@ public class ItemWheelEditorWindow : EditorWindow
               "橙线  外圆半径\n" +
               "色块  扇环颜色\n" +
               "外缘  圆弧描边\n" +
-              "白框  图标占位\n\n" +
+              "白框  图标占位\n" +
+              "中心  ItemInfo\n\n" +
               $"图标 {iconSize:0}  {(iconRotation == IconRotationMode.顺向 ? "顺向" : "正放")}\n" +
-              $"外弧段 {circleSegments}\n" +
-              $"内弧段 {innerArcSegments}\n" +
+              $"字号 {infoFontSize:0}\n" +
               $"扇环 {sectorCount}  间距 {arcOffset:0.#}°\n" +
               $"描边 {borderWidth:0}  单扇 {sweep:0.#}°"
             : "参数无效";
         GUI.Label(legendRect, legendText, legendStyle);
+    }
+
+    /// <summary>
+    /// 预览中心 ItemInfo 文本框
+    /// </summary>
+    private void DrawCenterInfoPreview(Vector2 center, float scale)
+    {
+        float w = Mathf.Max(8f, infoSizeDelta.x * scale);
+        float h = Mathf.Max(8f, infoSizeDelta.y * scale);
+        Rect infoRect = new Rect(center.x - w * 0.5f, center.y - h * 0.5f, w, h);
+
+        EditorGUI.DrawRect(infoRect, new Color(0f, 0f, 0f, 0.35f));
+        DrawRectOutline(infoRect, new Color(1f, 1f, 1f, 0.55f));
+
+        if (previewInfoStyle == null)
+        {
+            previewInfoStyle = new GUIStyle(EditorStyles.wordWrappedLabel)
+            {
+                alignment = TextAnchor.MiddleCenter,
+                wordWrap = true,
+                clipping = TextClipping.Clip
+            };
+        }
+
+        previewInfoStyle.fontSize = Mathf.Clamp(Mathf.RoundToInt(infoFontSize * scale * 0.55f), 8, 48);
+        previewInfoStyle.normal.textColor = infoFontColor;
+        GUI.Label(infoRect, string.IsNullOrEmpty(previewInfoText) ? "ItemInfo" : previewInfoText, previewInfoStyle);
     }
 
     /// <summary>
@@ -447,7 +559,10 @@ public class ItemWheelEditorWindow : EditorWindow
         }
     }
 
-    private void GenerateItemWheelPrefab()
+    /// <summary>
+    /// 生成轮盘预制体 asUiTemple 为 true 时套 UITemple 标准壳
+    /// </summary>
+    private void GenerateItemWheelPrefab(bool asUiTemple)
     {
         if (sectorCount < 1)
         {
@@ -469,54 +584,73 @@ public class ItemWheelEditorWindow : EditorWindow
         CalculateArcLayout(sectorCount, arcOffset, startAngleList, sweepAngleList);
 
         float sectorInner = circleInner + gapRadiusOffset;
-        string prefabPath = $"{saveFolder}/{WheelPrefabName}".Replace('\\', '/');
+        string fileName = asUiTemple ? TemplePrefabName : CleanPrefabName;
+        string prefabPath = $"{saveFolder}/{fileName}".Replace('\\', '/');
 
-        ClearExistingWheelPrefabs(saveFolder);
+        DeletePrefabIfExists(prefabPath);
 
-        GameObject root = CreateWheelRoot();
+        GameObject saveRoot = null;
         try
         {
             AssetDatabase.StartAssetEditing();
 
+            GameObject wheelRoot;
+            if (asUiTemple)
+            {
+                saveRoot = CreateUiTempleShell("UIItemWheel");
+                Transform content = saveRoot.transform.Find("UIContent");
+                wheelRoot = CreateWheelRoot(content, "ItemWheel");
+            }
+            else
+            {
+                wheelRoot = CreateWheelRoot(null, "Item Wheel");
+                saveRoot = wheelRoot;
+            }
+
             for (int i = 0; i < sectorCount; i++)
             {
                 GameObject sector = CreateSectorObject(i, startAngleList[i], sweepAngleList[i], sectorInner, circleOuter);
-                sector.transform.SetParent(root.transform, false);
+                sector.transform.SetParent(wheelRoot.transform, false);
             }
 
-            CreateCenterCircleObject(root.transform);
-            PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
+            GameObject center = CreateCenterCircleObject(wheelRoot.transform);
+            TextMeshProUGUI infoTmp = null;
+            if (generateItemInfo)
+                infoTmp = CreateItemInfoObject(center.transform);
+
+            BindControllerRefs(wheelRoot, infoTmp);
+            PrefabUtility.SaveAsPrefabAsset(saveRoot, prefabPath);
         }
         finally
         {
-            DestroyImmediate(root);
+            if (saveRoot != null)
+                DestroyImmediate(saveRoot);
             AssetDatabase.StopAssetEditing();
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
         }
 
-        EditorUtility.DisplayDialog("完成", $"已生成 {WheelPrefabName}\n路径: {prefabPath}", "确定");
+        EditorUtility.DisplayDialog("完成", $"已生成 {fileName}\n路径: {prefabPath}", "确定");
     }
 
-    private static void ClearExistingWheelPrefabs(string folder)
+    /// <summary>
+    /// 删除已有同名预制体
+    /// </summary>
+    private static void DeletePrefabIfExists(string prefabPath)
     {
-        folder = folder.Replace('\\', '/').TrimEnd('/');
-
-        string wheelPath = $"{folder}/{WheelPrefabName}";
-        if (AssetDatabase.LoadAssetAtPath<GameObject>(wheelPath) != null)
-            AssetDatabase.DeleteAsset(wheelPath);
-
-        for (int i = 0; i < 64; i++)
-        {
-            string sectorPath = $"{folder}/Sector_{i}.prefab";
-            if (AssetDatabase.LoadAssetAtPath<GameObject>(sectorPath) != null)
-                AssetDatabase.DeleteAsset(sectorPath);
-        }
+        if (AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath) != null)
+            AssetDatabase.DeleteAsset(prefabPath);
     }
 
-    private GameObject CreateWheelRoot()
+    /// <summary>
+    /// 创建干净轮盘根 含 ItemWheelController
+    /// </summary>
+    private GameObject CreateWheelRoot(Transform parent, string objectName)
     {
-        GameObject root = new GameObject("Item Wheel", typeof(RectTransform));
+        GameObject root = new GameObject(objectName, typeof(RectTransform));
+        if (parent != null)
+            root.transform.SetParent(parent, false);
+
         RectTransform rt = root.GetComponent<RectTransform>();
         rt.anchorMin = new Vector2(0.5f, 0.5f);
         rt.anchorMax = new Vector2(0.5f, 0.5f);
@@ -525,12 +659,77 @@ public class ItemWheelEditorWindow : EditorWindow
         rt.sizeDelta = new Vector2(circleOuter * 2f, circleOuter * 2f);
         rt.localScale = Vector3.one;
 
-        ItemWheelController controller = root.AddComponent<ItemWheelController>();
-        SerializedObject so = new SerializedObject(controller);
-        so.FindProperty("wheelRoot").objectReferenceValue = rt;
-        so.ApplyModifiedPropertiesWithoutUndo();
+        root.AddComponent<ItemWheelController>();
+        return root;
+    }
+
+    /// <summary>
+    /// 创建 UITemple 标准壳 根 Canvas CanvasGroup UIBindConfig + UIContent + UIMask
+    /// </summary>
+    private static GameObject CreateUiTempleShell(string rootName)
+    {
+        GameObject root = new GameObject(rootName, typeof(RectTransform));
+        RectTransform rootRt = root.GetComponent<RectTransform>();
+        rootRt.anchorMin = Vector2.zero;
+        rootRt.anchorMax = Vector2.one;
+        rootRt.offsetMin = Vector2.zero;
+        rootRt.offsetMax = Vector2.zero;
+        rootRt.pivot = new Vector2(0.5f, 0.5f);
+        rootRt.localScale = Vector3.one;
+        root.layer = 5;
+
+        Canvas canvas = root.AddComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceCamera;
+        canvas.pixelPerfect = true;
+        canvas.additionalShaderChannels = AdditionalCanvasShaderChannels.None;
+
+        CanvasScaler scaler = root.AddComponent<CanvasScaler>();
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ConstantPixelSize;
+        scaler.referencePixelsPerUnit = 100f;
+
+        root.AddComponent<GraphicRaycaster>();
+        root.AddComponent<CanvasGroup>();
+        root.AddComponent<UIBindConfig>();
+
+        GameObject content = new GameObject("UIContent", typeof(RectTransform));
+        content.transform.SetParent(root.transform, false);
+        StretchFull(content.GetComponent<RectTransform>());
+
+        GameObject mask = new GameObject("UIMask", typeof(RectTransform));
+        mask.transform.SetParent(root.transform, false);
+        StretchFull(mask.GetComponent<RectTransform>());
+        mask.AddComponent<CanvasRenderer>();
+        Image maskImage = mask.AddComponent<Image>();
+        maskImage.color = new Color(0.17f, 0.16f, 0.16f, 0.39f);
+        maskImage.raycastTarget = true;
 
         return root;
+    }
+
+    /// <summary>
+    /// Rect 铺满父节点
+    /// </summary>
+    private static void StretchFull(RectTransform rt)
+    {
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = Vector2.one;
+        rt.offsetMin = Vector2.zero;
+        rt.offsetMax = Vector2.zero;
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.localScale = Vector3.one;
+    }
+
+    /// <summary>
+    /// 绑定 Controller 的 wheelRoot infoText idleInfo
+    /// </summary>
+    private void BindControllerRefs(GameObject wheelRoot, TextMeshProUGUI infoTmp)
+    {
+        ItemWheelController controller = wheelRoot.GetComponent<ItemWheelController>();
+        SerializedObject so = new SerializedObject(controller);
+        so.FindProperty("wheelRoot").objectReferenceValue = wheelRoot.GetComponent<RectTransform>();
+        so.FindProperty("infoText").objectReferenceValue = infoTmp;
+        so.FindProperty("idleInfo").stringValue = idleInfoText ?? string.Empty;
+        so.ApplyModifiedPropertiesWithoutUndo();
     }
 
     private GameObject CreateSectorObject(int index, float startDeg, float sweepDeg, float inner, float outer)
@@ -568,6 +767,8 @@ public class ItemWheelEditorWindow : EditorWindow
         Image image = iconGo.AddComponent<Image>();
         image.raycastTarget = false;
         image.color = Color.white;
+        if (previewIconSprite != null)
+            image.sprite = previewIconSprite;
 
         float midDeg = startDeg + sweepDeg * 0.5f;
         float rad = midDeg * Mathf.Deg2Rad;
@@ -584,7 +785,7 @@ public class ItemWheelEditorWindow : EditorWindow
             : Quaternion.identity;
     }
 
-    private void CreateCenterCircleObject(Transform parent)
+    private GameObject CreateCenterCircleObject(Transform parent)
     {
         GameObject go = new GameObject("CenterCircle", typeof(RectTransform));
         go.transform.SetParent(parent, false);
@@ -602,6 +803,36 @@ public class ItemWheelEditorWindow : EditorWindow
         rt.anchoredPosition = Vector2.zero;
         rt.sizeDelta = new Vector2(circleInner * 2f, circleInner * 2f);
         rt.localScale = Vector3.one;
+        return go;
+    }
+
+    /// <summary>
+    /// 在 CenterCircle 下创建 ItemInfo TMP
+    /// </summary>
+    private TextMeshProUGUI CreateItemInfoObject(Transform center)
+    {
+        GameObject go = new GameObject(ItemInfoObjectName, typeof(RectTransform));
+        go.transform.SetParent(center, false);
+        go.AddComponent<CanvasRenderer>();
+
+        TextMeshProUGUI tmp = go.AddComponent<TextMeshProUGUI>();
+        tmp.raycastTarget = false;
+        tmp.text = string.IsNullOrEmpty(idleInfoText) ? (previewInfoText ?? string.Empty) : idleInfoText;
+        tmp.fontSize = infoFontSize;
+        tmp.color = infoFontColor;
+        tmp.alignment = infoAlignment;
+        tmp.enableWordWrapping = true;
+        if (infoFontAsset != null)
+            tmp.font = infoFontAsset;
+
+        RectTransform rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0.5f, 0.5f);
+        rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.anchoredPosition = Vector2.zero;
+        rt.sizeDelta = infoSizeDelta;
+        rt.localScale = Vector3.one;
+        return tmp;
     }
 
     private static void CalculateArcLayout(int count, float gap, List<float> startList, List<float> sweepList)

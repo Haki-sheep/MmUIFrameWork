@@ -40,7 +40,7 @@ namespace MieMieFrameWork.UI
         /// <summary>
         /// 显示窗口
         /// </summary>
-        public T ShowWindow<T>(bool isUseAnimation = false, Action action = null) where T : UIDataBase, new()
+        public T ShowWindow<T>(Action action = null) where T : UIDataBase, new()
         {
             Type type = typeof(T);
             string uiName = type.Name;
@@ -49,7 +49,6 @@ namespace MieMieFrameWork.UI
             {
                 var existingWindow = uiDic[uiName];
                 existingWindow.OnShow();
-                existingWindow.ApplyAniamtion = isUseAnimation;
                 action?.Invoke();
                 Debug.Log($"[UICoreMgr.ShowWindow] [{uiName}] 命中缓存 OnShow t={Time.realtimeSinceStartup:F3}");
                 return existingWindow as T;
@@ -59,7 +58,6 @@ namespace MieMieFrameWork.UI
             GameObject uiPrefab = UILoad.AddressableLoad(uiName);
             uiPrefab.transform.SetParent(UIRoot, false);
             uiWindow.BindGameObject(uiPrefab, UICamera);
-            uiWindow.ApplyAniamtion = isUseAnimation;
             uiDic.Add(uiName, uiWindow);
             uiWindow.OnAwake();
             uiWindow.OnShow();
@@ -70,11 +68,10 @@ namespace MieMieFrameWork.UI
         /// <summary>
         /// 隐藏窗口
         /// </summary>
-        public void HideWindow<T>(bool isUseAnimation = false, Action action = null) where T : UIDataBase, new()
+        public void HideWindow<T>(Action action = null) where T : UIDataBase, new()
         {
             Type type = typeof(T);
             string uiName = type.Name;
-            uiDic[uiName].ApplyAniamtion = isUseAnimation;
             uiDic[uiName]?.OnHide();
             action?.Invoke();
         }
@@ -82,14 +79,13 @@ namespace MieMieFrameWork.UI
         /// <summary>
         /// 关闭窗口
         /// </summary>
-        public void CloseWindow<T>(bool isUseAnimation = false, Action action = null) where T : UIDataBase, new()
+        public void CloseWindow<T>(Action action = null) where T : UIDataBase, new()
         {
             Type type = typeof(T);
             string uiName = type.Name;
 
             if (uiDic.TryGetValue(uiName, out var uiWindow))
             {
-                uiWindow.ApplyAniamtion = isUseAnimation;
                 uiWindow.OnDestroy();
                 UILoad.Release(uiName);
                 uiDic.Remove(uiName);
@@ -101,7 +97,7 @@ namespace MieMieFrameWork.UI
         /// <summary>
         /// 异步加载面板
         /// </summary>
-        public async UniTask<T> ShowWindowAsync<T>(bool isUseAnimation = false, Action<T> onComplete = null) where T : UIDataBase, new()
+        public async UniTask<T> ShowWindowAsync<T>(Action<T> onComplete = null) where T : UIDataBase, new()
         {
             Type type = typeof(T);
             string uiName = type.Name;
@@ -109,7 +105,6 @@ namespace MieMieFrameWork.UI
             if (uiDic.ContainsKey(uiName))
             {
                 var existingWindow = uiDic[uiName] as T;
-                existingWindow.ApplyAniamtion = isUseAnimation;
                 existingWindow.OnShow();
                 onComplete?.Invoke(existingWindow);
                 return existingWindow;
@@ -122,7 +117,6 @@ namespace MieMieFrameWork.UI
             T uiWindow = new T();
             uiPrefab.transform.SetParent(UIRoot, false);
             uiWindow.BindGameObject(uiPrefab, UICamera);
-            uiWindow.ApplyAniamtion = isUseAnimation;
             uiDic.Add(uiName, uiWindow);
             uiWindow.OnAwake();
             uiWindow.OnShow();

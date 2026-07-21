@@ -13,7 +13,8 @@ using MieMieFrameWork.UI;
 
 /// <summary>
 /// UI模版生成核心工具类 - 分部类方案
-/// 生成 {className}Gen.cs 自动获取组件 + {className}GenPartial.cs 用户扩展 + {className}.cs 用户手写模板
+/// 生成 {className}Gen.cs 序列化引用字段 + 挂载时烤引用
+/// {className}GenPartial.cs 用户扩展 + {className}.cs 用户手写模板
 /// </summary>
 public class GenerateUITool
 {
@@ -121,61 +122,35 @@ public class GenerateUITool
     // ==================== 生成 {className}Gen.cs ====================
     
     /// <summary>
-    /// 生成Gen脚本 - 自动获取组件属性
+    /// 生成Gen脚本 - 仅序列化引用字段 由挂载流程赋值 无运行时 Find
     /// </summary>
     private static void GenerateGenScript(string filePath, List<UIComponentInfo> uiComponents, string className)
     {
         StringBuilder sb = new StringBuilder();
 
-        // 文件头注释
         sb.AppendLine("/// <summary>");
         sb.AppendLine($"/// {className} View层 - 自动生成，请勿手动修改");
+        sb.AppendLine("/// 字段引用由生成器挂载时写入 运行时无 Find");
         sb.AppendLine("/// </summary>");
         sb.AppendLine();
 
-        // using语句
         sb.AppendLine("using UnityEngine;");
         sb.AppendLine("using UnityEngine.UI;");
         sb.AppendLine("using TMPro;");
         sb.AppendLine();
 
-        // 类声明
         sb.AppendLine($"public partial class {className}Gen : MonoBehaviour");
         sb.AppendLine("{");
 
-        // 组件字段
         foreach (var comp in uiComponents)
         {
             sb.AppendLine("    /// <summary>");
             sb.AppendLine($"    /// {comp.fieldName}");
             sb.AppendLine("    /// </summary>");
+            sb.AppendLine("    [SerializeField]");
             sb.AppendLine($"    public {comp.type} {comp.fieldName};");
+            sb.AppendLine();
         }
-
-        sb.AppendLine();
-
-        // Awake方法 - 获取组件
-        sb.AppendLine("    private void Awake()");
-        sb.AppendLine("    {");
-
-        foreach (var comp in uiComponents)
-        {
-            string findPath = GetComponentPath(comp);
-            
-            // 检查是否是直接子级还是更深层级
-            if (string.IsNullOrEmpty(findPath))
-            {
-                // 组件在当前GameObject上
-                sb.AppendLine($"        {comp.fieldName} = GetComponent<{comp.type}>();");
-            }
-            else
-            {
-                // 组件在子层级
-                sb.AppendLine($"        {comp.fieldName} = transform.Find(\"{findPath}\").GetComponent<{comp.type}>();");
-            }
-        }
-        
-        sb.AppendLine("    }");
 
         sb.AppendLine("}");
 
@@ -303,6 +278,8 @@ public class GenerateUITool
         public string path;
         public string fieldName; // 用于生成的字段名
         public int instanceId;   // 用于去重的GameObject实例ID
+        /// <summary> 编辑器挂载时用于烤引用 </summary>
+        public Component componentRef;
     }
 
     // 多前缀解析分隔符
@@ -370,7 +347,8 @@ public class GenerateUITool
             if (componentType == typeof(Transform) && target is RectTransform)
                 componentType = typeof(RectTransform);
 
-            if (target.GetComponent(componentType) == null)
+            Component componentRef = target.GetComponent(componentType);
+            if (componentRef == null)
             {
                 Debug.LogWarning($"[GenerateUITool] 节点缺少绑定组件: {bindItem.nodePath} -> {componentType.Name}", target);
                 continue;
@@ -390,7 +368,8 @@ public class GenerateUITool
                 type = GetCodeTypeName(componentType),
                 path = bindItem.nodePath,
                 fieldName = EnsureValidFieldName(fieldName),
-                instanceId = target.gameObject.GetInstanceID()
+                instanceId = target.gameObject.GetInstanceID(),
+                componentRef = componentRef
             });
         }
 
@@ -756,18 +735,11 @@ public class GenerateUITool
         return char.ToUpper(result[0]) + result.Substring(1);
     }
 
-    // 获取组件查找路径（用于transform.Find）
-    private static string GetComponentPath(UIComponentInfo comp)
-    {
-        // 使用扫描时计算的实际路径
-        return comp.path;
-    }
-
     // ========== 脚本编译完成后自动挂载 {ClassName}Gen.cs 到预制体 UIContent ==========
     //
     //  流程：RegisterGenScriptToPrefab（SessionState 待挂载队列 + 触发编译）
     //      → AssetDatabase.Refresh() 触发编译
-    //      → DidReloadScripts（Gen 类型已可用）→ OnScriptsReloaded 挂载
+    //      → DidReloadScripts（Gen 类型已可用）→ OnScriptsReloaded 挂载并烤序列化引用
 
     [Serializable]
     private class PendingAttach
@@ -814,22 +786,66 @@ public class GenerateUITool
         if (uiContent == null) return;
 
         var genType = GetTypeByName($"{className}Gen");
-        if (genType == null) return; // 类型未编译完成
-
-        if (uiContent.GetComponent(genType) != null) return;
+        if (genType == null) return;
 
         try
         {
-            Undo.AddComponent(uiContent.gameObject, genType);
+            Component gen = uiContent.GetComponent(genType);
+            if (gen == null)
+                gen = Undo.AddComponent(uiContent.gameObject, genType);
+
+            BindGenSerializedReferences(prefab, gen);
+            EditorUtility.SetDirty(gen);
             EditorUtility.SetDirty(prefab);
+            PrefabUtility.RecordPrefabInstancePropertyModifications(gen);
             AssetDatabase.SaveAssets();
-            Debug.Log($"[GenerateUITool] 已挂载 {className}Gen 到 {prefab.name}/UIContent");
+            Debug.Log($"[GenerateUITool] 已挂载并绑定引用 {className}Gen -> {prefab.name}/UIContent");
             RemovePendingAttach(className);
         }
         catch (Exception e)
         {
             Debug.LogWarning($"[GenerateUITool] 挂载失败: {e.Message}");
         }
+    }
+
+    /// <summary>
+    /// 按 UIBindConfig 将组件引用写入 Gen 序列化字段 无运行时 Find
+    /// </summary>
+    private static void BindGenSerializedReferences(GameObject prefabRoot, Component gen)
+    {
+        if (prefabRoot == null || gen == null) return;
+
+        List<UIComponentInfo> uiComponents = ScanUIPrefabComponents(prefabRoot);
+        if (uiComponents.Count == 0)
+        {
+            Debug.LogWarning($"[GenerateUITool] 绑定引用跳过 无有效勾选项: {prefabRoot.name}", prefabRoot);
+            return;
+        }
+
+        SerializedObject so = new SerializedObject(gen);
+        int boundCount = 0;
+
+        foreach (var comp in uiComponents)
+        {
+            if (comp.componentRef == null)
+            {
+                Debug.LogError($"[GenerateUITool] 引用为空 无法绑定字段 {comp.fieldName} path={comp.path}", prefabRoot);
+                continue;
+            }
+
+            SerializedProperty prop = so.FindProperty(comp.fieldName);
+            if (prop == null)
+            {
+                Debug.LogError($"[GenerateUITool] Gen 缺少字段 {comp.fieldName} 请重新生成脚本", gen);
+                continue;
+            }
+
+            prop.objectReferenceValue = comp.componentRef;
+            boundCount++;
+        }
+
+        so.ApplyModifiedPropertiesWithoutUndo();
+        Debug.Log($"[GenerateUITool] 已写入 {boundCount}/{uiComponents.Count} 个序列化引用 -> {gen.GetType().Name}");
     }
 
     [DidReloadScripts]

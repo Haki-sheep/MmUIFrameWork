@@ -65,7 +65,18 @@ namespace MieMieUITools.Editor
             if (gameObject == null) return;
 
             if (!TryGetUIRoot(gameObject.transform, out Transform uiRoot, out Transform uiContent)) return;
+
+            // 预制体根画绑定按钮总开关
+            if (gameObject.transform == uiRoot)
+            {
+                DrawRootBindVisibilityToggle(uiRoot.gameObject, selectionRect);
+                return;
+            }
+
             if (!IsSelfOrChildOf(gameObject.transform, uiContent)) return;
+
+            var config = uiRoot.GetComponent<UIBindConfig>();
+            if (config != null && !config.ShowHierarchyBindButtons) return;
 
             var bindableComponentList = GetBindableComponents(gameObject);
             if (bindableComponentList.Count == 0) return;
@@ -91,6 +102,60 @@ namespace MieMieUITools.Editor
 
                 GUI.backgroundColor = cacheColor;
             }
+        }
+
+        /// <summary>
+        /// 在 UI 根节点 Hierarchy 行绘制绑定按钮显隐开关
+        /// </summary>
+        private static void DrawRootBindVisibilityToggle(GameObject uiRoot, Rect selectionRect)
+        {
+            var config = uiRoot.GetComponent<UIBindConfig>();
+            if (config != null && config.hideFlags != HideFlags.None)
+            {
+                config.hideFlags = HideFlags.None;
+                EditorUtility.SetDirty(config);
+            }
+
+            bool showButtons = config == null || config.ShowHierarchyBindButtons;
+
+            const float toggleWidth = 52f;
+            var toggleRect = new Rect(
+                selectionRect.xMax - RightPadding - toggleWidth,
+                selectionRect.y + 1f,
+                toggleWidth,
+                selectionRect.height - 2f);
+
+            Color cacheColor = GUI.backgroundColor;
+            GUI.backgroundColor = showButtons
+                ? new Color(0.35f, 0.85f, 0.45f, 1f)
+                : new Color(0.55f, 0.55f, 0.55f, 1f);
+
+            if (GUI.Button(toggleRect, showButtons ? "Bind开" : "Bind关", EditorStyles.miniButton))
+            {
+                ToggleHierarchyBindVisibility(uiRoot, !showButtons);
+            }
+
+            GUI.backgroundColor = cacheColor;
+        }
+
+        /// <summary>
+        /// 切换 Hierarchy 绑定按钮显隐
+        /// </summary>
+        private static void ToggleHierarchyBindVisibility(GameObject uiRoot, bool show)
+        {
+            var config = uiRoot.GetComponent<UIBindConfig>();
+            if (config == null)
+            {
+                config = Undo.AddComponent<UIBindConfig>(uiRoot);
+            }
+
+            config.hideFlags = HideFlags.None;
+            Undo.RecordObject(config, "Toggle Hierarchy Bind Buttons");
+            config.ShowHierarchyBindButtons = show;
+            EditorUtility.SetDirty(config);
+            EditorUtility.SetDirty(uiRoot);
+            PrefabUtility.RecordPrefabInstancePropertyModifications(config);
+            EditorApplication.RepaintHierarchyWindow();
         }
 
         private static bool TryGetUIRoot(Transform target, out Transform uiRoot, out Transform uiContent)
@@ -169,8 +234,9 @@ namespace MieMieUITools.Editor
             if (config == null)
             {
                 config = Undo.AddComponent<UIBindConfig>(uiRoot);
-                config.hideFlags = HideFlags.HideInInspector;
             }
+
+            config.hideFlags = HideFlags.None;
 
             string nodePath = GetNodePath(uiContent, target);
             string componentFullTypeName = GetComponentFullTypeName(componentType);

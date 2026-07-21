@@ -79,6 +79,11 @@
             "guid": "f5121d606772a874d80abc74ff135fc7",
             "prefabName": "UITemple",
             "folder": "Assets/_Scripts/UI"
+        },
+        {
+            "guid": "ca4e815a62cc7ab4f88a95d8e1595667",
+            "prefabName": "UIItemWheel",
+            "folder": "Assets/MmUIFrameWork/Widgets/ItemWheel/Runtime/UIFramScripts"
         }
     ]
 }
