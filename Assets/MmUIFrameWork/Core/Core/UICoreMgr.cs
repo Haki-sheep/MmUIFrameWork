@@ -9,8 +9,23 @@ namespace MieMieUIFrameWork.UI
     /// UI 核心管理类
     /// </summary>
     [Serializable]
-    public class UICoreMgr : MonoBehaviour
+    public class UICoreMgr :MonoBehaviour
     {
+        private static UICoreMgr instance;
+        public static UICoreMgr Instance
+        {
+            get
+            {
+                if (instance == null)
+                {
+                    GameObject obj = new GameObject("UICoreMgr");
+                    instance = obj.AddComponent<UICoreMgr>();
+                    instance.Init();
+                }
+                return instance;
+            }
+        }
+        
         /// <summary>
         /// 堆栈系统
         /// </summary>

@@ -89,6 +89,21 @@
             "guid": "f0942a64680c0a64f895beaf38893276",
             "prefabName": "GameStartPanel",
             "folder": "Assets/MmUIFrameWork/Runtime/GameUIFlow/Scripts/GameStartPanel"
+        },
+        {
+            "guid": "d184bb3969928ed49aa1c3875cb68dfe",
+            "prefabName": "TipPanel",
+            "folder": "Assets/MmUIFrameWork/Runtime/GameUIFlow/Scripts/TipPanel"
+        },
+        {
+            "guid": "c0f7715d75d78814ebf172aa3b6d7d23",
+            "prefabName": "PlayerPanel",
+            "folder": "Assets/MmUIFrameWork/Runtime/GameUIFlow/Scripts/PlayerPanel/Panel"
+        },
+        {
+            "guid": "4a3100f52529b4a439fec2b36630933f",
+            "prefabName": "SettingPanel",
+            "folder": "Assets/MmUIFrameWork/Runtime/GameUIFlow/Scripts/SettingPanel"
         }
     ]
 }

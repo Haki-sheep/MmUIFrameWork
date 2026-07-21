@@ -6,7 +6,6 @@ using UnityEngine;
 
 public partial class GameStartPanelGen
 {
-    // 在这里添加额外的View逻辑
     [SerializeField]
     public string MiddleSceneName;
     [SerializeField]

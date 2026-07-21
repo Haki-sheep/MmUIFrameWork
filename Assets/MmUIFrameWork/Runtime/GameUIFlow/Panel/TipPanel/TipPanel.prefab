@@ -185,7 +185,7 @@ GameObject:
   - component: {fileID: 4401334389598772338}
   - component: {fileID: 4014724284797729481}
   m_Layer: 0
-  m_Name: Text (TMP)
+  m_Name: Info
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -441,7 +441,31 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: MieMieUIFrameWork.UI::MieMieUIFrameWork.UI.UIBindConfig
   showHierarchyBindButtons: 1
-  bindItemList: []
+  bindItemList:
+  - nodePath: Image
+    nodeName: Image
+    componentTypeName: RectTransform
+    componentFullTypeName: UnityEngine.RectTransform
+    componentAssemblyName: UnityEngine.CoreModule
+    fieldName: ImageRectTransform
+  - nodePath: Image/Text (TMP)
+    nodeName: Text (TMP)
+    componentTypeName: TextMeshProUGUI
+    componentFullTypeName: TMPro.TextMeshProUGUI
+    componentAssemblyName: Unity.TextMeshPro
+    fieldName: TextTMPTextMeshProUGUI
+  - nodePath: Image
+    nodeName: Image
+    componentTypeName: DOTweenSequence
+    componentFullTypeName: DOTweenSequence
+    componentAssemblyName: MieMieUIFrameWork.UI
+    fieldName: ImageDOTweenSequence
+  - nodePath: Image/Info
+    nodeName: Info
+    componentTypeName: TextMeshProUGUI
+    componentFullTypeName: TMPro.TextMeshProUGUI
+    componentAssemblyName: Unity.TextMeshPro
+    fieldName: InfoTextMeshProUGUI
 --- !u!1 &7683741003891732365
 GameObject:
   m_ObjectHideFlags: 0
@@ -451,6 +475,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7255036918731319271}
+  - component: {fileID: 227271664931827653}
   m_Layer: 0
   m_Name: UIContent
   m_TagString: Untagged
@@ -478,6 +503,21 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 199.99997}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &227271664931827653
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7683741003891732365}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed3e74853ac3e844e895528e603f9074, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MieMieUIFrameWork.UI::TipPanelGen
+  ImageRectRectTransform: {fileID: 7319094483928256873}
+  TextTMPTextMeshProUGUI: {fileID: 4014724284797729481}
+  ImageDOTweenSequence: {fileID: 0}
 --- !u!1 &9081333892454974661
 GameObject:
   m_ObjectHideFlags: 0
