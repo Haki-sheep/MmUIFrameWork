@@ -84,6 +84,11 @@
             "guid": "ca4e815a62cc7ab4f88a95d8e1595667",
             "prefabName": "UIItemWheel",
             "folder": "Assets/MmUIFrameWork/Widgets/ItemWheel/Runtime/UIFramScripts"
+        },
+        {
+            "guid": "f0942a64680c0a64f895beaf38893276",
+            "prefabName": "GameStartPanel",
+            "folder": "Assets/MmUIFrameWork/Runtime/GameUIFlow/Scripts/GameStartPanel"
         }
     ]
 }

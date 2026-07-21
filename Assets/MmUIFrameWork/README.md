@@ -1,7 +1,9 @@
-# Mm UI Frame (`com.hakisheep.mm-uiframe`)
+# MieMieUIFrameWork (`com.hakisheep.mm-uiframe`)
 
 通用 UI 框架包：窗口栈、Addressable 加载、StandUI、DOTween 序列、跳字、物品轮盘。  
 不含具体游戏窗口类与玩法数据。
+
+编辑器菜单：`Tools/MieMieUIFrameWork/`（含 GenerateUITemp、FloatingEditor、ItemWheel）
 
 ## 引用方式
 
@@ -53,9 +55,9 @@
 ```text
 com.hakisheep.mm-uiframe/
 ├── package.json
-├── MieMieFrameWork.UI.asmdef   # 覆盖 Runtime + Widgets
-├── Runtime/                    # 窗口栈 加载器
-├── Widgets/                    # DOTween序列 跳字 轮盘
+├── MieMieUIFrameWork.UI.asmdef   # 覆盖 Core + Runtime
+├── Core/                       # 窗口栈 加载器 基类
+├── Runtime/Widgets/            # DOTween序列 跳字 轮盘
 ├── StandUIPrefabs/             # 标准控件预制体
 ├── Editor/                     # 生成器 烘焙 自定义 Inspector
 └── Samples~/Demo/              # 可选试玩场景

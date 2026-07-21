@@ -87,7 +87,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: cdaf9bf916fb51049a38b5604f53132b, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: MieMieFrameWork.UI::DOTweenSequence
+  m_EditorClassIdentifier: MieMieUIFrameWork.UI::DOTweenSequence
   m_Preset: {fileID: 11400000, guid: e9e5a0f20e259514a9e102ab9c1931c2, type: 2}
   m_Sequence: []
   DefaultTarget: {fileID: 4082659939296331398}

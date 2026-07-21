@@ -32,10 +32,10 @@ namespace MieMieUITools.Editor
         public static string StandUIPrefabsRoot => $"{PackageRoot}/StandUIPrefabs";
 
         /// <summary> DOTween 预设目录 </summary>
-        public static string DoTweenPresetsRoot => $"{PackageRoot}/Widgets/DoTweenAnimExtension/Presets";
+        public static string DoTweenPresetsRoot => $"{PackageRoot}/Runtime/Widgets/DoTweenAnimExtension/Presets";
 
         /// <summary> 跳字系统根目录 </summary>
-        public static string FloatingTextRoot => $"{PackageRoot}/Widgets/FloatingTextSystem";
+        public static string FloatingTextRoot => $"{PackageRoot}/Runtime/Widgets/FloatingTextSystem";
 
         /// <summary>
         /// 清空缓存
@@ -50,11 +50,11 @@ namespace MieMieUITools.Editor
         /// </summary>
         private static string ResolvePackageRoot()
         {
-            string[] guidList = AssetDatabase.FindAssets("MieMieFrameWork.UI t:AssemblyDefinitionAsset");
+            string[] guidList = AssetDatabase.FindAssets("MieMieUIFrameWork.UI t:AssemblyDefinitionAsset");
             for (int i = 0; i < guidList.Length; i++)
             {
                 string path = AssetDatabase.GUIDToAssetPath(guidList[i]).Replace('\\', '/');
-                if (!path.EndsWith("/MieMieFrameWork.UI.asmdef", System.StringComparison.OrdinalIgnoreCase))
+                if (!path.EndsWith("/MieMieUIFrameWork.UI.asmdef", System.StringComparison.OrdinalIgnoreCase))
                     continue;
 
                 // asmdef 在包根 或 Runtime 子目录 两种布局都兼容

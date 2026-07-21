@@ -9,7 +9,7 @@ using System.Linq;
 using System;
 using UnityEditor.Callbacks;
 using MieMieUITools.Editor;
-using MieMieFrameWork.UI;
+using MieMieUIFrameWork.UI;
 
 /// <summary>
 /// UI模版生成核心工具类 - 分部类方案
@@ -103,12 +103,11 @@ public class GenerateUITool
                 GenerateMainScriptTemplate(mainScriptPath, uiComponents, className);
             }
 
-            AssetDatabase.Refresh();
-
-            // 注册映射：编译完成后自动挂载Gen脚本到预制体
+            // 必须先写入待挂载队列 再 Refresh 触发编译
+            // 否则 DidReloadScripts 会在注册前就跑完 导致永远挂不上
             RegisterGenScriptToPrefab(className, uiPrefab);
 
-            EditorUtility.DisplayDialog("成功", $"UI模版生成完成！\n\nGen脚本(自动生成): {genScriptPath}\nGen扩展脚本(用户编写): {genExtScriptPath}\n主脚本(用户编写): {mainScriptPath}", "确定");
+            EditorUtility.DisplayDialog("成功", $"UI模版生成完成！\n\nGen脚本(自动生成): {genScriptPath}\nGen扩展脚本(用户编写): {genExtScriptPath}\n主脚本(用户编写): {mainScriptPath}\n\n编译完成后会自动挂载到 UIContent", "确定");
             return;
         }
         catch (System.Exception e)
@@ -144,9 +143,6 @@ public class GenerateUITool
 
         foreach (var comp in uiComponents)
         {
-            sb.AppendLine("    /// <summary>");
-            sb.AppendLine($"    /// {comp.fieldName}");
-            sb.AppendLine("    /// </summary>");
             sb.AppendLine("    [SerializeField]");
             sb.AppendLine($"    public {comp.type} {comp.fieldName};");
             sb.AppendLine();
@@ -218,8 +214,8 @@ public class GenerateUITool
         sb.AppendLine();
 
         // using语句
-        sb.AppendLine("using MieMieFrameWork;");
-        sb.AppendLine("using MieMieFrameWork.UI;");
+        sb.AppendLine("using MieMieUIFrameWork;");
+        sb.AppendLine("using MieMieUIFrameWork.UI;");
         sb.AppendLine("using UnityEngine;");
         sb.AppendLine("using UnityEngine.UI;");
         sb.AppendLine();
@@ -737,9 +733,9 @@ public class GenerateUITool
 
     // ========== 脚本编译完成后自动挂载 {ClassName}Gen.cs 到预制体 UIContent ==========
     //
-    //  流程：RegisterGenScriptToPrefab（SessionState 待挂载队列 + 触发编译）
-    //      → AssetDatabase.Refresh() 触发编译
-    //      → DidReloadScripts（Gen 类型已可用）→ OnScriptsReloaded 挂载并烤序列化引用
+    //  流程：先 RegisterGenScriptToPrefab 写入 SessionState
+    //      → AssetDatabase.Refresh 触发编译
+    //      → DidReloadScripts → delayCall 挂载并烤序列化引用
 
     [Serializable]
     private class PendingAttach
@@ -748,11 +744,13 @@ public class GenerateUITool
         public string prefabGuid;
     }
 
-    private const string PendingAttachesSessionKey = "MieMieFrameWork.GenerateUITool.PendingAttaches";
+    private const string PendingAttachesSessionKey = "MieMieUIFrameWork.GenerateUITool.PendingAttaches";
+    private const string PendingRetrySessionKey = "MieMieUIFrameWork.GenerateUITool.PendingRetry";
     private const string LegacyPendingAttachesFile = "Assets/MieMieFrameTools/Editor/UIForEditor/UIScripts/PendingAttaches.json";
+    private const int MaxPendingRetry = 30;
 
     /// <summary>
-    /// 生成时记录映射并立即触发挂载流程
+    /// 生成时先入队 再 Refresh 等编译完成后挂载
     /// </summary>
     public static void RegisterGenScriptToPrefab(string className, GameObject prefab)
     {
@@ -764,47 +762,74 @@ public class GenerateUITool
         string guid = AssetDatabase.AssetPathToGUID(prefabPath);
         if (string.IsNullOrEmpty(guid)) return;
 
-        // 写入待挂载队列
         var pending = new PendingAttach { className = className, prefabGuid = guid };
         SavePendingAttach(pending);
 
-        Debug.Log($"[GenerateUITool] 注册待挂载: {className}Gen -> {prefab.name}");
-
-        // 触发编译，DidReloadScripts 会在编译完成后自动执行
+        Debug.Log($"[GenerateUITool] 注册待挂载: {className}Gen -> {prefab.name} guid={guid}");
+        SessionState.SetInt(PendingRetrySessionKey, 0);
         AssetDatabase.Refresh();
+
+        // 若本次无需重新编译 DidReloadScripts 不会再触发 下一帧补挂
+        EditorApplication.delayCall += ProcessPendingAttaches;
     }
 
-    private static void TryAttachOnce(string className, string prefabGuid)
+    /// <summary>
+    /// 尝试挂载一次 成功返回 true
+    /// </summary>
+    private static bool TryAttachOnce(string className, string prefabGuid)
     {
         string prefabPath = AssetDatabase.GUIDToAssetPath(prefabGuid);
-        if (string.IsNullOrEmpty(prefabPath)) return;
-
-        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
-        if (prefab == null) return;
-
-        Transform uiContent = prefab.transform.Find("UIContent");
-        if (uiContent == null) return;
+        if (string.IsNullOrEmpty(prefabPath))
+        {
+            Debug.LogWarning($"[GenerateUITool] 挂载失败 找不到预制体 guid={prefabGuid}");
+            return false;
+        }
 
         var genType = GetTypeByName($"{className}Gen");
-        if (genType == null) return;
+        if (genType == null)
+        {
+            Debug.LogWarning($"[GenerateUITool] 挂载暂缓 类型尚未就绪: {className}Gen");
+            return false;
+        }
+
+        if (EditorApplication.isCompiling || EditorApplication.isUpdating)
+        {
+            return false;
+        }
 
         try
         {
-            Component gen = uiContent.GetComponent(genType);
-            if (gen == null)
-                gen = Undo.AddComponent(uiContent.gameObject, genType);
+            GameObject prefabRoot = PrefabUtility.LoadPrefabContents(prefabPath);
+            try
+            {
+                Transform uiContent = prefabRoot.transform.Find("UIContent");
+                if (uiContent == null)
+                {
+                    Debug.LogWarning($"[GenerateUITool] 挂载失败 未找到 UIContent: {prefabPath}", prefabRoot);
+                    return false;
+                }
 
-            BindGenSerializedReferences(prefab, gen);
-            EditorUtility.SetDirty(gen);
-            EditorUtility.SetDirty(prefab);
-            PrefabUtility.RecordPrefabInstancePropertyModifications(gen);
-            AssetDatabase.SaveAssets();
-            Debug.Log($"[GenerateUITool] 已挂载并绑定引用 {className}Gen -> {prefab.name}/UIContent");
-            RemovePendingAttach(className);
+                Component gen = uiContent.GetComponent(genType);
+                if (gen == null)
+                {
+                    gen = uiContent.gameObject.AddComponent(genType);
+                }
+
+                BindGenSerializedReferences(prefabRoot, gen);
+                PrefabUtility.SaveAsPrefabAsset(prefabRoot, prefabPath);
+                Debug.Log($"[GenerateUITool] 已挂载并绑定引用 {className}Gen -> {prefabPath}/UIContent");
+                RemovePendingAttach(className);
+                return true;
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(prefabRoot);
+            }
         }
         catch (Exception e)
         {
-            Debug.LogWarning($"[GenerateUITool] 挂载失败: {e.Message}");
+            Debug.LogWarning($"[GenerateUITool] 挂载失败: {e.Message}\n{e.StackTrace}");
+            return false;
         }
     }
 
@@ -851,24 +876,91 @@ public class GenerateUITool
     [DidReloadScripts]
     private static void OnScriptsReloaded()
     {
-        var pending = LoadPendingAttaches();
-        foreach (var p in pending)
-        {
-            TryAttachOnce(p.className, p.prefabGuid);
-        }
+        // 域重载刚结束时类型有时尚未完全可用 延迟一帧再挂
+        EditorApplication.delayCall += ProcessPendingAttaches;
     }
 
+    /// <summary>
+    /// 处理待挂载队列 未就绪则再延迟重试
+    /// </summary>
+    private static void ProcessPendingAttaches()
+    {
+        if (EditorApplication.isCompiling || EditorApplication.isUpdating)
+        {
+            EditorApplication.delayCall += ProcessPendingAttaches;
+            return;
+        }
+
+        var pending = LoadPendingAttaches();
+        if (pending.Count == 0)
+        {
+            SessionState.EraseInt(PendingRetrySessionKey);
+            return;
+        }
+
+        bool hasRemain = false;
+        for (int i = 0; i < pending.Count; i++)
+        {
+            PendingAttach p = pending[i];
+            if (!TryAttachOnce(p.className, p.prefabGuid))
+            {
+                hasRemain = true;
+            }
+        }
+
+        if (!hasRemain || LoadPendingAttaches().Count == 0)
+        {
+            SessionState.EraseInt(PendingRetrySessionKey);
+            return;
+        }
+
+        int retry = SessionState.GetInt(PendingRetrySessionKey, 0) + 1;
+        SessionState.SetInt(PendingRetrySessionKey, retry);
+        if (retry > MaxPendingRetry)
+        {
+            Debug.LogError($"[GenerateUITool] 自动挂载重试超限 请检查控制台后手动挂 Gen 到 UIContent 剩余={LoadPendingAttaches().Count}");
+            SessionState.EraseInt(PendingRetrySessionKey);
+            return;
+        }
+
+        EditorApplication.delayCall += ProcessPendingAttaches;
+    }
+
+    /// <summary>
+    /// 按简单类名查找 Type 兼容无命名空间与带命名空间
+    /// </summary>
     private static Type GetTypeByName(string typeName)
     {
         foreach (var assembly in System.AppDomain.CurrentDomain.GetAssemblies())
         {
             try
             {
-                var type = assembly.GetType(typeName);
+                Type type = assembly.GetType(typeName);
                 if (type != null) return type;
             }
-            catch { }
+            catch
+            {
+            }
         }
+
+        foreach (var assembly in System.AppDomain.CurrentDomain.GetAssemblies())
+        {
+            try
+            {
+                Type[] types = assembly.GetTypes();
+                for (int i = 0; i < types.Length; i++)
+                {
+                    if (types[i].Name == typeName)
+                    {
+                        return types[i];
+                    }
+                }
+            }
+            catch
+            {
+            }
+        }
+
         return null;
     }
 
@@ -882,7 +974,10 @@ public class GenerateUITool
 
         try
         {
-            return JsonUtility.FromJson<PendingAttachList>(json)?.items ?? new List<PendingAttach>();
+            PendingAttachList wrapper = JsonUtility.FromJson<PendingAttachList>(json);
+            if (wrapper?.items == null || wrapper.items.Length == 0)
+                return new List<PendingAttach>();
+            return new List<PendingAttach>(wrapper.items);
         }
         catch
         {
@@ -914,7 +1009,7 @@ public class GenerateUITool
         }
 
         SessionState.SetString(PendingAttachesSessionKey,
-            JsonUtility.ToJson(new PendingAttachList { items = list }));
+            JsonUtility.ToJson(new PendingAttachList { items = list.ToArray() }));
     }
 
     /// <summary>
@@ -933,8 +1028,8 @@ public class GenerateUITool
         {
             string json = File.ReadAllText(LegacyPendingAttachesFile);
             var imported = JsonUtility.FromJson<PendingAttachList>(json);
-            if (imported?.items != null && imported.items.Count > 0)
-                SavePendingList(imported.items);
+            if (imported?.items != null && imported.items.Length > 0)
+                SavePendingList(new List<PendingAttach>(imported.items));
         }
         catch (Exception e)
         {
@@ -947,7 +1042,7 @@ public class GenerateUITool
     [Serializable]
     private class PendingAttachList
     {
-        public List<PendingAttach> items = new();
+        public PendingAttach[] items = Array.Empty<PendingAttach>();
     }
 
     /// <summary>

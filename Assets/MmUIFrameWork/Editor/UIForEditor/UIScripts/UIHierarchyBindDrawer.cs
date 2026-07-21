@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using MieMieFrameWork.UI;
+using MieMieUIFrameWork.UI;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;

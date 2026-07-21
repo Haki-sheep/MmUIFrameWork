@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using MieMieFrameWork.UI.FloatingText;
+using MieMieUIFrameWork.UI.FloatingText;
 using MieMieUITools.Editor;
 using TMPro;
 using UnityEditor;
@@ -604,7 +604,7 @@ public static class FloatingTextAtlasBaker
     private static Material CreateOrUpdateMaterial(Texture2D atlas, int columns, int rows)
     {
         var mat = AssetDatabase.LoadAssetAtPath<Material>(MaterialPath);
-        Shader shader = Shader.Find("MieMieFrameWork/FloatingTextInstanced");
+        Shader shader = Shader.Find("MieMieUIFrameWork/FloatingTextInstanced");
         if (shader == null) shader = Shader.Find("Sprites/Default");
         if (mat == null)
         {

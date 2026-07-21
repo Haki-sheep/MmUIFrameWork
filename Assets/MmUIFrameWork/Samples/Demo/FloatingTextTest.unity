@@ -147,7 +147,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: acfb8c7268aae9f498e058addca5a75d, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: MieMieFrameWork.UI::MieMieFrameWork.UI.FloatingText.FloatingTextTestSpawner
+  m_EditorClassIdentifier: MieMieUIFrameWork.UI::MieMieUIFrameWork.UI.FloatingText.FloatingTextTestSpawner
   m_World: {fileID: 2092722457}
   m_Radius: 8
   m_DailyTargetActive: 80
@@ -577,7 +577,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4ea0e5a0a44f64f4cba51a7b6874061c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: MieMieFrameWork.UI::MieMieFrameWork.UI.FloatingText.FloatingTextWorld
+  m_EditorClassIdentifier: MieMieUIFrameWork.UI::MieMieUIFrameWork.UI.FloatingText.FloatingTextWorld
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

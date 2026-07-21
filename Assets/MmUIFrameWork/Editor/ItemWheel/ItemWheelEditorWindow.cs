@@ -1,7 +1,7 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
 using System.IO;
-using MieMieFrameWork.UI;
+using MieMieUIFrameWork.UI;
 using MieMieUITools.Editor;
 using TMPro;
 using UnityEditor;
@@ -23,12 +23,12 @@ public class ItemWheelEditorWindow : EditorWindow
     private const string TemplePrefabName = "UIItemWheel.prefab";
     private const string ItemInfoObjectName = "ItemInfo";
     private const float PreviewHeight = 320f;
-    private const string PrefsPrefix = "MmItemWheel_";
+    private const string PrefsPrefix = "MieMieUIFrameWork_ItemWheel_";
 
-    [MenuItem("Tools/Mm ItemWheel")]
+    [MenuItem("Tools/MieMieUIFrameWork/ItemWheel")]
     private static void Open()
     {
-        var window = GetWindow<ItemWheelEditorWindow>("Mm ItemWheel");
+        var window = GetWindow<ItemWheelEditorWindow>("ItemWheel");
         window.minSize = new Vector2(380f, 720f);
     }
 
@@ -192,7 +192,7 @@ public class ItemWheelEditorWindow : EditorWindow
     /// </summary>
     private static string GetDefaultSaveFolder()
     {
-        return $"{PackagePaths.PackageRoot}/Widgets/ItemWheel/Prefab";
+        return $"{PackagePaths.PackageRoot}/Runtime/Widgets/ItemWheel/Prefab";
     }
 
     /// <summary>

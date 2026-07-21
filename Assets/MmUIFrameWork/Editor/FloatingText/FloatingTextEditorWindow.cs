@@ -1,5 +1,5 @@
 #if UNITY_EDITOR
-using MieMieFrameWork.UI.FloatingText;
+using MieMieUIFrameWork.UI.FloatingText;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
@@ -29,7 +29,7 @@ public class FloatingTextEditorWindow : EditorWindow
     private Vector2 m_Scroll;
     private string m_LastMessage = string.Empty;
 
-    [MenuItem("Tools/MieMieFrameWork/FloatingEditor")]
+    [MenuItem("Tools/MieMieUIFrameWork/FloatingEditor")]
     public static void Open()
     {
         var wnd = GetWindow<FloatingTextEditorWindow>();

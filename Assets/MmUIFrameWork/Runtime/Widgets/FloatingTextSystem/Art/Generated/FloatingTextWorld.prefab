@@ -1,0 +1,69 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &5005014726016720906
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1533552848670031331}
+  - component: {fileID: 9104311011579676342}
+  m_Layer: 0
+  m_Name: FloatingTextWorld
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1533552848670031331
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5005014726016720906}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9104311011579676342
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5005014726016720906}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ea0e5a0a44f64f4cba51a7b6874061c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MieMieUIFrameWork.UI::MieMieUIFrameWork.UI.FloatingText.FloatingTextWorld
+  m_Atlas: {fileID: 2800000, guid: d81e893cecb93e74d8260c54828755dc, type: 3}
+  m_CharMap: {fileID: 0}
+  m_Material: {fileID: 2100000, guid: 32ce7049f61bdcd438841f88d70c8dfb, type: 2}
+  m_Camera: {fileID: 0}
+  m_AtlasColumns: 16
+  m_AtlasRows: 3
+  m_MaxEntries: 102400
+  m_MaxDigits: 8
+  m_GlyphWidth: 0.35
+  m_GlyphHeight: 0.45
+  m_NormalLifetime: 0.85
+  m_RiseSpeed: 1.6
+  m_NormalScale: 1
+  m_NormalColor: {r: 1, g: 0.92, b: 0.4, a: 1}
+  m_CritLifetime: 1.1
+  m_CritRiseSpeed: 1.9
+  m_CritScale: 1.35
+  m_CritColor: {r: 1, g: 0.35, b: 0.15, a: 1}
+  m_CritPopStart: 1.2
+  m_CritPopEnd: 1
+  m_CritPopLifetimeRatio: 0.25
+  m_HorizontalJitter: 0.35
+  m_FadePower: 2
