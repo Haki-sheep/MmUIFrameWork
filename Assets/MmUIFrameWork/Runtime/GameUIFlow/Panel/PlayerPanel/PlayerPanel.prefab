@@ -1874,6 +1874,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: MieMieUIFrameWork.UI::MieMieUIFrameWork.UI.PowerBar
   PowerFill: {fileID: 7920945653538461544}
+  fillDuration: 0.2
 --- !u!1 &7927187042602538318
 GameObject:
   m_ObjectHideFlags: 0
@@ -2333,6 +2334,8 @@ MonoBehaviour:
   hitScale: 1.35
   punchInDuration: 0.05
   easeOutDuration: 0.22
+  moveScale: 1.12
+  moveDuration: 0.12
 --- !u!224 &6439276469742507154 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 985994599238657723, guid: c240db383c6318a43b00de71cfb6e968, type: 3}
